@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { Client, GatewayIntentBits, Partials } from "discord.js";
+import { Client, GatewayIntentBits, Partials, TextChannel } from "discord.js";
 
 dotenv.config();
 const client = new Client({
@@ -17,13 +17,8 @@ const client = new Client({
   ],
 });
 
-client.on("error", (err) => {
-  console.log(err.message);
-});
-
-client.on("disconnected", () => {
-  console.log("Crashed");
-});
+var completedChallenges: Array<string> = [];
+var channel: TextChannel;
 
 client.on("messageCreate", (message) => {
   if (message.guildId != process.env.GUILD!) return;
@@ -34,18 +29,19 @@ client.on("messageCreate", (message) => {
 });
 
 client.on("messageReactionAdd", async (reaction, user) => {
+  if (completedChallenges.includes(reaction.message.id)) return;
   if (reaction.message.author == user) return;
   if (user.bot) return;
   if (reaction.count < 3) return;
-});
-
-client.on("messageReactionRemove", async (reaction, user) => {
-  if (reaction.message.author == user) return;
-  return;
-});
-
-client.on("ready", () => {
-  console.log("ready");
+  if (!channel)
+    channel = client.channels.cache.get(process.env.CHANNEL!) as TextChannel;
+  await channel.send(
+    `${reaction.message.author.tag} has completed a challenge! Rolling the dice....`
+  );
+  await channel.send(
+    `You rolled a ${(Math.floor(Math.random() * 6) + 1).toString()} 🎲`
+  );
+  completedChallenges.push(reaction.message.id);
 });
 
 client.login(process.env.TOKEN!);
