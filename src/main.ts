@@ -16,29 +16,42 @@ const client = new Client({
   ],
 });
 
-var completedChallenges: Array<string> = [];
 var channel: TextChannel;
 
-client.on("messageCreate", (message) => {
+client.on("ready", async () => {
+  channel = client.channels.cache.get(process.env.CHANNEL!) as TextChannel;
+});
+
+client.on("messageCreate", async (message) => {
   if (message.guildId != process.env.GUILD!) return;
   if (message.author.bot) return;
   if (message.channelId != process.env.CHANNEL!) return;
   if (message.attachments.size == 0) return;
-  message.react("🎉");
-});
+  message.react("🐍");
 
-client.on("messageReactionAdd", async (reaction, user) => {
-  if (completedChallenges.includes(reaction.message.id)) return;
-  if (reaction.message.author == user) return;
-  if (user.bot) return;
-  if (reaction.count < 3) return;
-  if (!channel)
-    channel = client.channels.cache.get(process.env.CHANNEL!) as TextChannel;
-  await channel.send(
-    `${reaction.message.author.tag} has completed a challenge! Rolling the dice....`
-  );
-  await channel.send(`You rolled a ${Math.floor(Math.random() * 6) + 1} 🎲`);
-  completedChallenges.push(reaction.message.id);
+  const collector = message.createReactionCollector({
+    filter: (reaction, user) => reaction.emoji.name === "🐍" && !user.bot,
+    time: 1000 * 10,
+    max: 2,
+  });
+
+  collector.on("end", async (collected) => {
+    if (collected.size > 1) {
+      await channel.send(
+        `<@${message.author.id}> has completed a challenge! Rolling the dice....`
+      );
+      await channel.send(
+        `You rolled a ${Math.floor(Math.random() * 6) + 1} 🎲`
+      );
+    } else {
+      await channel.send(
+        `<@${message.author.id}> has completed a challenge but not enough people reacted to it 😬! Rolling the dice anyways cause no xp waste....`
+      );
+      await channel.send(
+        `You rolled a ${Math.floor(Math.random() * 6) + 1} 🎲`
+      );
+    }
+  });
 });
 
 client.login(process.env.TOKEN!);
