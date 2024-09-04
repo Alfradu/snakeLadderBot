@@ -30,11 +30,7 @@
     // Specify the root directory of TypeScript source files
     "rootDir": "src"
   },
-  "ts-node": {
-    "esm": true,
 
-    "experimentalSpecifierResolution": "node"
-  },
   // Specify the files or patterns to include in the compilation
   "include": ["*", "src/main.ts"],
 
