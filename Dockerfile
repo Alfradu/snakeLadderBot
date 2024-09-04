@@ -10,4 +10,4 @@ RUN npm install
 
 COPY . . 
 
-CMD ["node", "/usr/src/slb/src/main.ts"]
+CMD ["npx", "tsx", "/usr/src/slb/src/main.ts"]
