@@ -1,7 +1,6 @@
-import dotenv from "dotenv";
+import "dotenv/config.js";
 import { Client, GatewayIntentBits, Partials, TextChannel } from "discord.js";
 
-dotenv.config();
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -38,9 +37,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
   await channel.send(
     `${reaction.message.author.tag} has completed a challenge! Rolling the dice....`
   );
-  await channel.send(
-    `You rolled a ${(Math.floor(Math.random() * 6) + 1).toString()} 🎲`
-  );
+  await channel.send(`You rolled a ${Math.floor(Math.random() * 6) + 1} 🎲`);
   completedChallenges.push(reaction.message.id);
 });
 
