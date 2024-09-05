@@ -30,13 +30,14 @@ client.on("messageCreate", async (message) => {
   message.react("🐍");
 
   const collector = message.createReactionCollector({
-    filter: (reaction, user) => reaction.emoji.name === "🐍" && !user.bot,
-    time: 1000 * 10,
+    filter: (reaction, user) =>
+      reaction.emoji.name === "🐍" && !user.bot && user != message.author,
+    time: 1000 * 60 * 60,
     max: 2,
   });
 
-  collector.on("end", async (collected) => {
-    if (collected.size > 1) {
+  collector.on("end", async (_, reason) => {
+    if (reason === "limit") {
       await channel.send(
         `<@${message.author.id}> has completed a challenge! Rolling the dice....`
       );
@@ -45,7 +46,7 @@ client.on("messageCreate", async (message) => {
       );
     } else {
       await channel.send(
-        `<@${message.author.id}> has completed a challenge but not enough people reacted to it 😬! Rolling the dice anyways cause no xp waste....`
+        `<@${message.author.id}> has completed a challenge but not enough people reacted to it 😬 Rolling the dice anyways cause no xp waste....`
       );
       await channel.send(
         `You rolled a ${Math.floor(Math.random() * 6) + 1} 🎲`
