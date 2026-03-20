@@ -22,9 +22,9 @@ jobs:
       - name: Create .env from secrets
         run: |
           cat > .env <<EOF
-          TOKEN=${{ secrets.TOKEN }}
-          GUILD=${{ secrets.GUILD }}
-          CHANNEL=${{ secrets.CHANNEL }}
+          TOKEN="${{ secrets.TOKEN }}"
+          GUILD="${{ secrets.GUILD }}"
+          CHANNEL="${{ secrets.CHANNEL }}"
           EOF
         # .env now exists in workspace for Docker build
 
