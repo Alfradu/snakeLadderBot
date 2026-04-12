@@ -7,6 +7,15 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 
+app.use((req: Request, res: Response, next) => {
+  const key = req.headers["x-api-key"];
+  if (!key || key !== process.env.API_KEY) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+});
+
 interface BountyBody {
   bountyId: string;
   playerId: string;

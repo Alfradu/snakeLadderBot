@@ -15,24 +15,38 @@ Create a `.env` file at the root with:
 TOKEN="<discord bot token>"
 GUILD="<discord server/guild ID>"
 CHANNEL="<discord channel ID>"
+PORT="1337"
+API_KEY="<random secret for REST API auth>"
 ```
 
 These are consumed via `dotenv` at startup. The bot will fail silently or crash without them.
 
 ## Architecture
 
-The entire bot lives in [src/main.ts](src/main.ts) (~52 lines). It is a Discord.js v14 bot with a single-purpose flow:
+The bot is split across three files:
 
-1. **Startup:** Connects to Discord, caches the target text channel (stored in the `channel` variable).
-2. **`messageCreate` handler:** Watches the configured CHANNEL for messages with attachments from non-bots. On match, auto-reacts with 🐍 and starts a reaction collector.
-3. **Reaction collector:** Waits for 2 non-bot, non-author 🐍 reactions. On completion (`end` event with reason `"limit"`), announces the bounty as completed. Otherwise announces low engagement.
+- **[src/main.ts](src/main.ts)** — entry point; wires bot and API together, calls `client.login()`.
+- **[src/bot.ts](src/bot.ts)** — Discord client setup, shared `state` singleton (`{ client, channel }`), and `registerBotHandlers()`. The `messageCreate` handler (currently commented out) watched for user-posted images; the API flow is the active path.
+- **[src/api.ts](src/api.ts)** — Express v5 app on `POST /bounty`. Requires `X-Api-Key` header matching `API_KEY`. Accepts `multipart/form-data` with `image` (file), `bountyId` (int), `playerId` (int), `contributorIds` (repeated field or comma-separated). Posts the image to Discord, seeds 🐍, creates a reaction collector, returns `202 { messageId }` immediately.
+
+**Reaction collector (API flow):** waits for 2 non-bot 🐍 reactions on the bot-posted message. On `"limit"` → announces verification. Otherwise → announces low engagement. A DB update hook is stubbed with a `TODO` comment in the `"limit"` branch.
 
 **Required Discord gateway intents:** `Guilds`, `GuildMessages`, `MessageContent`, `GuildMessageReactions`  
 **Required partials:** `User`, `Message`, `Channel`, `Reaction` (needed for reaction events on cached/uncached messages)
 
+## Deployment
+
+The server runs via `docker-compose.yml`, which starts two containers:
+- **bot** — the Discord bot + REST API (`${DOCKERHUB_USERNAME}/slb:latest`)
+- **cloudflared** — Cloudflare Tunnel, proxies public HTTPS traffic to `bot:1337`
+
+Set `CLOUDFLARE_TUNNEL_TOKEN` and `DOCKERHUB_USERNAME` in a `.env` on the server (not baked into the image), then `docker compose up -d`.
+
+To configure the tunnel: create it in the Cloudflare Zero Trust dashboard → Tunnels, point the public hostname to `http://bot:1337`.
+
 ## CI/CD
 
-`.github/workflows/docker-image.yml` builds and pushes a Docker image to Docker Hub on every push/PR to `main`. It creates the `.env` from GitHub Secrets (`TOKEN`, `GUILD`, `CHANNEL`, `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`) during the build and removes it afterward. Images are tagged as both `slb-{unix_timestamp}` and `latest`.
+`.github/workflows/docker-image.yml` builds and pushes a Docker image to Docker Hub on every push/PR to `main`. It bakes a `.env` from GitHub Secrets (`TOKEN`, `GUILD`, `CHANNEL`, `PORT`, `API_KEY`, `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`) into the image and passes `PORT` as a build arg for `EXPOSE`. Images are tagged as both `slb-{unix_timestamp}` and `latest`.
 
 ## Module System Note
 

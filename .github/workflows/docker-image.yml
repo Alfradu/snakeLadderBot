@@ -26,6 +26,7 @@ jobs:
           GUILD="${{ secrets.GUILD }}"
           CHANNEL="${{ secrets.CHANNEL }}"
           PORT="${{ secrets.PORT }}"
+          API_KEY="${{ secrets.API_KEY }}"
           EOF
         # .env now exists in workspace for Docker build
 
