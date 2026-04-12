@@ -25,6 +25,7 @@ jobs:
           TOKEN="${{ secrets.TOKEN }}"
           GUILD="${{ secrets.GUILD }}"
           CHANNEL="${{ secrets.CHANNEL }}"
+          PORT="${{ secrets.PORT }}"
           EOF
         # .env now exists in workspace for Docker build
 
@@ -38,6 +39,7 @@ jobs:
         run: |
           docker build . \
             -f Dockerfile \
+            --build-arg PORT="${{ secrets.PORT }}" \
             -t "${{ secrets.DOCKERHUB_USERNAME }}/slb:${{ steps.tag.outputs.IMAGE_TAG }}" \
             -t "${{ secrets.DOCKERHUB_USERNAME }}/slb:latest"
 
