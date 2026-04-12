@@ -7,7 +7,7 @@ const supabase = createClient(
 
 export async function getUserById(id: number) {
   const { data, error } = await supabase
-    .from("users")
+    .from("user")
     .select("id, username, score")
     .eq("id", id)
     .single();
@@ -47,7 +47,7 @@ export async function completeTask(
     .throwOnError();
 
   await supabase
-    .from("users")
+    .from("user")
     .update({ score: player.score + primaryPoints })
     .eq("id", playerId)
     .throwOnError();
@@ -55,7 +55,7 @@ export async function completeTask(
   for (const contributorId of contributorIds) {
     const contributor = await getUserById(contributorId);
     await supabase
-      .from("users")
+      .from("user")
       .update({ score: contributor.score + secondaryPoints })
       .eq("id", contributorId)
       .throwOnError();
