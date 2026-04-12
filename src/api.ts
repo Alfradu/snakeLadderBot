@@ -1,11 +1,18 @@
 import express, { Request, Response } from "express";
 import multer from "multer";
+import cors from "cors";
 import { AttachmentBuilder } from "discord.js";
 import { state } from "./bot.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
+
+app.use(
+  cors({
+    allowedHeaders: ["Content-Type", "X-Api-Key"],
+  }),
+);
 
 app.use((req: Request, res: Response, next) => {
   const key = req.headers["x-api-key"];
