@@ -17,6 +17,8 @@ GUILD="<discord server/guild ID>"
 CHANNEL="<discord channel ID>"
 PORT="1337"
 API_KEY="<random secret for REST API auth>"
+SUPABASE_URL="<supabase project URL>"
+SUPABASE_ANON_KEY="<supabase anon key>"
 ```
 
 These are consumed via `dotenv` at startup. The bot will fail silently or crash without them.

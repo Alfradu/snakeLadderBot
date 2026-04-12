@@ -3,6 +3,13 @@ import multer from "multer";
 import cors from "cors";
 import { AttachmentBuilder } from "discord.js";
 import { state } from "./bot.js";
+import {
+  getUserById,
+  completeTask,
+  rollTaskForSlot,
+  getRollableTasks,
+  getTaskById,
+} from "./db.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -63,13 +70,15 @@ app.post(
     const parsedBountyId = parseInt(bountyId, 10);
     const parsedPlayerId = parseInt(playerId, 10);
 
+    const player = await getUserById(parsedPlayerId);
+
     const attachment = new AttachmentBuilder(req.file.buffer, {
       name: req.file.originalname || "bounty.png",
     });
 
     const posted = await channel.send({
       content:
-        `**Bounty #${parsedBountyId}** submitted by player ${parsedPlayerId}` +
+        `**Bounty #${parsedBountyId}** submitted by ${player.username}` +
         (parsedContributorIds.length > 0
           ? `\nContributors: ${parsedContributorIds.join(", ")}`
           : ""),
@@ -79,17 +88,33 @@ app.post(
     await posted.react("🐍");
 
     const collector = posted.createReactionCollector({
-      filter: (reaction, user) =>
-        reaction.emoji.name === "🐍" && !user.bot,
+      filter: (reaction, user) => reaction.emoji.name === "🐍" && !user.bot,
       max: 2,
     });
 
     collector.on("end", async (_, reason) => {
       if (reason === "limit") {
         await channel.send(
-          `Bounty #${parsedBountyId} for player ${parsedPlayerId} has been verified! nice!`,
+          `Bounty #${parsedBountyId} for ${player.username} has been verified! nice!`,
         );
-        // TODO: send DB update here
+        try {
+          var taskToComplete = await getTaskById(parsedBountyId);
+          await completeTask(
+            parsedBountyId,
+            parsedPlayerId,
+            parsedContributorIds,
+            taskToComplete.primary_points,
+            taskToComplete.secondary_points,
+          );
+          var tasks = await getRollableTasks();
+          if (tasks.length > 0) {
+            const chosenTask = tasks[Math.floor(Math.random() * tasks.length)];
+            await rollTaskForSlot(taskToComplete.slot, chosenTask);
+            await channel.send(`New Bounty Rolled! ${chosenTask.name}`);
+          }
+        } catch (err) {
+          console.error("DB update failed after bounty completion:", err);
+        }
       } else {
         await channel.send(
           `Bounty #${parsedBountyId} did not receive enough reactions which is kinda sad`,
