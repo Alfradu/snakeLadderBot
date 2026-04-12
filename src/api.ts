@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import cors from "cors";
 import { AttachmentBuilder } from "discord.js";
@@ -129,6 +129,15 @@ app.post(
     res.status(202).json({ messageId: posted.id });
   },
 );
+
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  const message = err instanceof Error ? err.message : JSON.stringify(err, null, 2);
+  const stack = err instanceof Error ? err.stack : undefined;
+  console.error("Unhandled error on", req.method, req.path);
+  console.error("Error:", message);
+  if (stack) console.error("Stack:", stack);
+  res.status(500).json({ error: message });
+});
 
 export function startApi(port: number): void {
   app.listen(port, () => {
