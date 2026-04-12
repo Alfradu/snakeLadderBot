@@ -9,6 +9,7 @@ import {
   rollTaskForSlot,
   getRollableTasks,
   getTaskById,
+  insertHistory,
 } from "./db.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -104,6 +105,11 @@ app.post(
             parsedContributorIds,
             taskToComplete.primary_points,
             taskToComplete.secondary_points,
+          );
+          await insertHistory(
+            parsedPlayerId,
+            parsedBountyId,
+            parsedContributorIds,
           );
           var tasks = await getRollableTasks();
           if (tasks.length > 0) {

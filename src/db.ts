@@ -83,3 +83,27 @@ export async function rollTaskForSlot(
     .eq("id", task.id)
     .throwOnError();
 }
+
+export async function insertHistory(
+  claimerId: number,
+  taskId: number,
+  contributorIds: number[],
+) {
+  const { data: historyRow, error: histError } = await supabase
+    .from("history")
+    .insert({ claimer_id: claimerId, task_id: taskId })
+    .select("id")
+    .single();
+  if (histError) throw histError;
+
+  if (contributorIds.length > 0) {
+    const rows = contributorIds.map((uid) => ({
+      user_id: uid,
+      history_id: historyRow.id,
+    }));
+    const { error: contribError } = await supabase
+      .from("contributor")
+      .insert(rows);
+    if (contribError) throw contribError;
+  }
+}
