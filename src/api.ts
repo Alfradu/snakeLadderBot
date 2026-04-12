@@ -110,10 +110,14 @@ app.post(
           if (tasks.length > 0) {
             const chosenTask = tasks[Math.floor(Math.random() * tasks.length)];
             await rollTaskForSlot(taskToComplete.slot, chosenTask);
-            await channel.send(`New Bounty Rolled! ${chosenTask.name}`);
+            await channel.send(`New Bounty Rolled! ${chosenTask.title}`);
           }
         } catch (err) {
-          console.error("DB update failed after bounty completion:", err);
+          const message =
+            err instanceof Error
+              ? err.message
+              : JSON.stringify(err, null, 2);
+          console.error("DB update failed after bounty completion:", message);
         }
       } else {
         await channel.send(

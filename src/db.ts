@@ -65,17 +65,12 @@ export async function completeTask(
 export async function getRollableTasks() {
   const { data, error } = await supabase
     .from("task")
-    .select("id, name")
+    .select("id, title")
     .eq("completed", false)
     .eq("pending", false)
-    .eq("slot", null);
+    .is("slot", null);
   if (error) throw error;
-  return data as [
-    {
-      id: number;
-      name: string;
-    },
-  ];
+  return data as { id: number; title: string }[];
 }
 
 export async function rollTaskForSlot(
