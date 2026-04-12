@@ -8,6 +8,10 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . . 
+COPY . .
+
+ARG PORT
+
+EXPOSE $PORT
 
 CMD ["npx", "tsx", "/usr/src/slb/src/main.ts"]
