@@ -75,10 +75,10 @@ app.post(
     const attachment = new AttachmentBuilder(req.file.buffer, {
       name: req.file.originalname || "bounty.png",
     });
-
+    var taskToComplete = await getTaskById(parsedBountyId);
     const posted = await channel.send({
       content:
-        `**Bounty #${parsedBountyId}** submitted by ${player.username}` +
+        `**${taskToComplete.title}** completed by ${player.username}` +
         (parsedContributorIds.length > 0
           ? `\nContributors: ${parsedContributorIds.join(", ")}`
           : ""),
@@ -95,10 +95,9 @@ app.post(
     collector.on("end", async (_, reason) => {
       if (reason === "limit") {
         await channel.send(
-          `Bounty #${parsedBountyId} for ${player.username} has been verified! nice!`,
+          `${taskToComplete.title} completed by ${player.username} has been verified! nice!`,
         );
         try {
-          var taskToComplete = await getTaskById(parsedBountyId);
           await completeTask(
             parsedBountyId,
             parsedPlayerId,
@@ -110,13 +109,11 @@ app.post(
           if (tasks.length > 0) {
             const chosenTask = tasks[Math.floor(Math.random() * tasks.length)];
             await rollTaskForSlot(taskToComplete.slot, chosenTask);
-            await channel.send(`New Bounty Rolled! ${chosenTask.title}`);
+            await channel.send(`New Bounty Rolled! **${chosenTask.title}**`);
           }
         } catch (err) {
           const message =
-            err instanceof Error
-              ? err.message
-              : JSON.stringify(err, null, 2);
+            err instanceof Error ? err.message : JSON.stringify(err, null, 2);
           console.error("DB update failed after bounty completion:", message);
         }
       } else {
@@ -131,7 +128,8 @@ app.post(
 );
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
-  const message = err instanceof Error ? err.message : JSON.stringify(err, null, 2);
+  const message =
+    err instanceof Error ? err.message : JSON.stringify(err, null, 2);
   const stack = err instanceof Error ? err.stack : undefined;
   console.error("Unhandled error on", req.method, req.path);
   console.error("Error:", message);

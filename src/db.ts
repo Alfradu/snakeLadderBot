@@ -75,7 +75,7 @@ export async function getRollableTasks() {
 
 export async function rollTaskForSlot(
   slot: number,
-  task: { id: number; name: string },
+  task: { id: number; title: string },
 ): Promise<void> {
   await supabase
     .from("task")
